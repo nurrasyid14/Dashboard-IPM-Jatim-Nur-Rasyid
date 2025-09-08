@@ -8,7 +8,7 @@ from sklearn.decomposition import PCA
 # Judul Aplikasi
 # ==========================
 st.set_page_config(page_title="Clustering Dashboard", layout="wide")
-st.title("Clustering Dashboard - IPM Jatim (Lengkap)")
+st.title("Clustering Dashboard")
 
 # ==========================
 # Upload Data
