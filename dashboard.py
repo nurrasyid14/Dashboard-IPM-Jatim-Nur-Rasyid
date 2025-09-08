@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 
 st.set_page_config(page_title="Clustering Dashboard", layout="wide")
 
-st.title("📊 Clustering Dashboard (Interactive)")
+st.title("Clustering Dashboard (Interactive)")
 
 # Upload CSV
 uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
