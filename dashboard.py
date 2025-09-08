@@ -2,125 +2,107 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
 
-# ------------------------------
-# Konfigurasi halaman
-# ------------------------------
+# ==========================
+# Judul Aplikasi
+# ==========================
 st.set_page_config(page_title="Clustering Dashboard", layout="wide")
-st.title("Clustering Dashboard (Interactive)")
+st.title("📊 Clustering Dashboard - IPM Jatim (Flexible)")
 
-# ------------------------------
-# Upload file
-# ------------------------------
-uploaded_file = st.file_uploader("Upload your data file", type=["csv", "xls", "xlsx"])
+# ==========================
+# Upload Data
+# ==========================
+uploaded_file = st.file_uploader("Upload dataset (CSV/XLS/XLSX)", type=["csv", "xls", "xlsx"])
 
-if uploaded_file:
-    # Baca file sesuai ekstensi
-    if uploaded_file.name.endswith(".csv"):
-        data = pd.read_csv(uploaded_file)
-    else:
-        data = pd.read_excel(uploaded_file)
+if uploaded_file is not None:
+    # Coba baca data
+    try:
+        if uploaded_file.name.endswith(".csv"):
+            data = pd.read_csv(uploaded_file)
+        else:
+            data = pd.read_excel(uploaded_file)
+    except Exception as e:
+        st.error(f"Gagal membaca file: {e}")
+        st.stop()
 
-    st.success(f"File berhasil dibaca: {uploaded_file.name}")
+    st.subheader("📂 Data Preview")
+    st.dataframe(data.head())
 
-    # ------------------------------
-    # Sidebar controls
-    # ------------------------------
-    st.sidebar.header("Settings")
-    num_clusters = st.sidebar.slider("Number of clusters (K)", 2, 10, 3)
-    numeric_cols = data.select_dtypes("number").columns.tolist()
-    features = st.sidebar.multiselect(
-        "Select features for clustering",
-        numeric_cols,
-        default=numeric_cols[:3] if len(numeric_cols) >= 3 else numeric_cols
+    # ==========================
+    # Preprocessing
+    # ==========================
+    numeric_data = data.select_dtypes(include=["number"]).copy()
+
+    if numeric_data.empty:
+        st.error("❌ Dataset tidak punya kolom numerik untuk clustering.")
+        st.stop()
+
+    # Tangani missing values
+    numeric_data = numeric_data.dropna()  # atau bisa ganti fillna(0)
+
+    if numeric_data.shape[0] < 2:
+        st.error("❌ Dataset terlalu sedikit setelah menghapus missing values.")
+        st.stop()
+
+    # ==========================
+    # Sidebar Controls
+    # ==========================
+    st.sidebar.header("⚙️ Pengaturan Clustering")
+    num_clusters = st.sidebar.number_input(
+        "Jumlah Cluster",
+        min_value=2,
+        max_value=10,
+        value=3,
+        step=1
     )
 
-    # ------------------------------
-    # Jalankan clustering
-    # ------------------------------
-    if len(features) >= 2:
-        kmeans = KMeans(n_clusters=num_clusters, random_state=42)
-        data["Cluster"] = kmeans.fit_predict(data[features])
+    # ==========================
+    # KMeans Clustering
+    # ==========================
+    kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
+    clustered_data = data.loc[numeric_data.index].copy()
+    clustered_data["Cluster"] = kmeans.fit_predict(numeric_data)
 
-        st.subheader("Dataset Preview")
-        st.dataframe(data.head())
+    st.subheader("🔎 Data dengan Label Cluster")
+    st.dataframe(clustered_data.head())
 
-        # ------------------------------
-        # Scatter Plot (2D)
-        # ------------------------------
-        st.subheader("Scatter Plot (2D)")
-        fig = px.scatter(data, x=features[0], y=features[1], color="Cluster",
-                         title="Scatter Plot")
-        st.plotly_chart(fig, use_container_width=True)
+    # ==========================
+    # Visualisasi
+    # ==========================
+    st.subheader("📊 Visualisasi Cluster")
 
-        # ------------------------------
-        # 3D Scatter Plot
-        # ------------------------------
-        if len(features) >= 3:
-            st.subheader("3D Scatter Plot")
-            fig3d = px.scatter_3d(data, x=features[0], y=features[1], z=features[2],
-                                  color="Cluster", title="3D Scatter Plot")
-            st.plotly_chart(fig3d, use_container_width=True)
+    # Cluster Size Bar Chart
+    cluster_counts = clustered_data["Cluster"].value_counts().reset_index(name="Count")
+    cluster_counts.rename(columns={"index": "Cluster"}, inplace=True)
+    fig_bar = px.bar(cluster_counts, x="Cluster", y="Count", title="Cluster Sizes")
+    st.plotly_chart(fig_bar, use_container_width=True)
 
-        # ------------------------------
-        # Cluster Size Bar Chart
-        # ------------------------------
-        st.subheader("Cluster Sizes")
-        cluster_counts = data["Cluster"].value_counts().reset_index(name="Count")
-        cluster_counts.rename(columns={"index": "Cluster"}, inplace=True)
+    # Scatter Plot
+    if numeric_data.shape[1] >= 2:
+        x_axis = st.sidebar.selectbox("Pilih X-axis", numeric_data.columns, index=0)
+        y_axis = st.sidebar.selectbox("Pilih Y-axis", numeric_data.columns, index=1)
 
-        fig_bar = px.bar(
-            cluster_counts,
-            x="Cluster",
-            y="Count",
-            title="Cluster Sizes"
+        fig_scatter = px.scatter(
+            clustered_data,
+            x=x_axis,
+            y=y_axis,
+            color="Cluster",
+            title=f"Scatter Plot: {y_axis} vs {x_axis}"
         )
-
-        st.plotly_chart(fig_bar, use_container_width=True)
-
-        # ------------------------------
-        # PCA Projection
-        # ------------------------------
-        if len(features) >= 2:
-            st.subheader("PCA Projection (2D)")
-            pca = PCA(n_components=2)
-            pca_result = pca.fit_transform(data[features])
-            data["PCA1"], data["PCA2"] = pca_result[:, 0], pca_result[:, 1]
-            fig_pca = px.scatter(data, x="PCA1", y="PCA2", color="Cluster",
-                                 title="PCA Projection (2D)")
-            st.plotly_chart(fig_pca, use_container_width=True)
-
-        # ------------------------------
-        # Correlation Heatmap
-        # ------------------------------
-        st.subheader("Correlation Heatmap")
-        corr = data[features].corr()
-        fig_corr = px.imshow(corr, text_auto=True, aspect="auto",
-                             title="Correlation Heatmap")
-        st.plotly_chart(fig_corr, use_container_width=True)
-
-        # ------------------------------
-        # Box Plot (pilihan kolom)
-        # ------------------------------
-        col_choice = st.selectbox("Select column for Box Plot", features)
-        if col_choice:
-            st.subheader(f"Box Plot of {col_choice}")
-            fig_box = px.box(data, y=col_choice, color="Cluster",
-                             title=f"Box Plot of {col_choice}")
-            st.plotly_chart(fig_box, use_container_width=True)
-
-        # ------------------------------
-        # Download hasil clustering
-        # ------------------------------
-        csv_download = data.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            label="📥 Download clustered data (CSV)",
-            data=csv_download,
-            file_name="clustered_data.csv",
-            mime="text/csv",
-        )
+        st.plotly_chart(fig_scatter, use_container_width=True)
     else:
-        st.error("Pilih minimal 2 fitur numerik untuk clustering.")
+        st.info("Scatter Plot membutuhkan minimal 2 kolom numerik.")
+
+    # Box Plot
+    col_box = st.sidebar.selectbox("Pilih kolom untuk Box Plot", numeric_data.columns)
+    fig_box = px.box(clustered_data, y=col_box, color="Cluster", title=f"Box Plot: {col_box}")
+    st.plotly_chart(fig_box, use_container_width=True)
+
+    # Histogram
+    col_hist = st.sidebar.selectbox("Pilih kolom untuk Histogram", numeric_data.columns)
+    fig_hist = px.histogram(clustered_data, x=col_hist, color="Cluster",
+                            barmode="overlay", title=f"Histogram: {col_hist}")
+    st.plotly_chart(fig_hist, use_container_width=True)
+
 else:
-    st.info("👆 Upload file CSV/XLS/XLSX untuk mulai analisis.")
+    st.info("👆 Silakan upload file CSV/XLS/XLSX untuk memulai.")
