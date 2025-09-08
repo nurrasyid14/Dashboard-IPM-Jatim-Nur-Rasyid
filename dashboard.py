@@ -67,10 +67,16 @@ if uploaded_file:
         # Cluster Size Bar Chart
         # ------------------------------
         st.subheader("Cluster Sizes")
-        cluster_counts = data["Cluster"].value_counts().reset_index()
-        fig_bar = px.bar(cluster_counts, x="index", y="Cluster",
-                         labels={"index": "Cluster", "Cluster": "Count"},
-                         title="Cluster Sizes")
+        cluster_counts = data["Cluster"].value_counts().reset_index(name="Count")
+        cluster_counts.rename(columns={"index": "Cluster"}, inplace=True)
+
+        fig_bar = px.bar(
+            cluster_counts,
+            x="Cluster",
+            y="Count",
+            title="Cluster Sizes"
+        )
+
         st.plotly_chart(fig_bar, use_container_width=True)
 
         # ------------------------------
