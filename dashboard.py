@@ -13,7 +13,7 @@ st.title("Clustering Dashboard")
 # ==========================
 # Upload Data
 # ==========================
-uploaded_file = st.file_uploader("Masukkan sembarang Dataset (CSV/XLS/XLSX)", type=["csv", "xls", "xlsx"])
+uploaded_file = st.file_uploader("Masukkan Dataset (CSV/XLS/XLSX)", type=["csv", "xls", "xlsx"])
 
 if uploaded_file is not None:
     # Coba baca data
@@ -156,4 +156,4 @@ if uploaded_file is not None:
     st.plotly_chart(fig_corr, use_container_width=True)
 
 else:
-    st.info("👆 Silakan upload file CSV/XLS/XLSX untuk memulai.")
+    st.info("👆 Masukkan Sembarang Dataset [CSV/XLS/XLSX] untuk memulai.")
