@@ -13,7 +13,7 @@ st.title("Clustering Dashboard")
 # ==========================
 # Upload Data
 # ==========================
-uploaded_file = st.file_uploader("Upload dataset (CSV/XLS/XLSX)", type=["csv", "xls", "xlsx"])
+uploaded_file = st.file_uploader("Masukkan sembarang Dataset (CSV/XLS/XLSX)", type=["csv", "xls", "xlsx"])
 
 if uploaded_file is not None:
     # Coba baca data
