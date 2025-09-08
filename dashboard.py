@@ -8,7 +8,7 @@ from sklearn.decomposition import PCA
 # Judul Aplikasi
 # ==========================
 st.set_page_config(page_title="Clustering Dashboard", layout="wide")
-st.title("📊 Clustering Dashboard - IPM Jatim (Lengkap)")
+st.title("Clustering Dashboard - IPM Jatim (Lengkap)")
 
 # ==========================
 # Upload Data
@@ -26,7 +26,7 @@ if uploaded_file is not None:
         st.error(f"Gagal membaca file: {e}")
         st.stop()
 
-    st.subheader("📂 Data Preview")
+    st.subheader("Data Preview")
     st.dataframe(data.head())
 
     # ==========================
@@ -42,13 +42,13 @@ if uploaded_file is not None:
     numeric_data = numeric_data.dropna()
 
     if numeric_data.shape[0] < 2:
-        st.error("❌ Dataset terlalu sedikit setelah menghapus missing values.")
+        st.error("Dataset terlalu sedikit setelah menghapus missing values.")
         st.stop()
 
     # ==========================
     # Sidebar Controls
     # ==========================
-    st.sidebar.header("⚙️ Pengaturan Clustering")
+    st.sidebar.header("⚙Pengaturan Clustering")
     num_clusters = st.sidebar.number_input(
         "Jumlah Cluster",
         min_value=2,
@@ -70,7 +70,7 @@ if uploaded_file is not None:
     # ==========================
     # Visualisasi
     # ==========================
-    st.subheader("📊 Visualisasi Cluster")
+    st.subheader("Visualisasi Cluster")
 
     # Cluster Size Bar Chart
     cluster_counts = clustered_data["Cluster"].value_counts().reset_index(name="Count")
@@ -145,7 +145,7 @@ if uploaded_file is not None:
     st.plotly_chart(fig_hist, use_container_width=True)
 
     # Correlation Matrix
-    st.subheader("📈 Correlation Matrix")
+    st.subheader("Correlation Matrix")
     corr = numeric_data.corr()
     fig_corr = px.imshow(
         corr,
